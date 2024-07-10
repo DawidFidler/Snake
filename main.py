@@ -3,7 +3,7 @@ import sys
 from pygame.math import Vector2
 import random
 
-pygame.display.set_caption("Sssnake")
+pygame.display.set_caption("Snake Game")
 
 FPS = 60
 CELL_SIZE = 40
@@ -17,7 +17,7 @@ clock = pygame.time.Clock()
 
 class Fruit:
     def __init__(self):
-        """Create x and y position, create a vector 2d, draw a quare
+        """Create x and y position, create a vector 2d, draw a square
         """
         self.x = random.randint(0, CELL_NUMBER - 1)
         self.y = random.randint(0, CELL_NUMBER - 1)
@@ -59,8 +59,6 @@ class Snake:
         self.body_br = pygame.image.load('Graphics/body_br.png').convert_alpha()
         self.body_bl = pygame.image.load('Graphics/body_bl.png').convert_alpha()
 
-        # self.head = self.head_right
-        self.tail = self.tail_left
 
     def draw_snake(self):
         self.update_head_graphics()
@@ -83,7 +81,24 @@ class Snake:
             elif index == len(self.body) -1:    #Last segment
                 screen.blit(self.tail, block_rect)
             else:
-                pygame.draw.rect(screen, (26, 26, 255), block_rect)
+                # Indexing from self.body, index is going to be our current element. Adding or subtracting one to get previous or next block. Subtracting the current block to get relation between those two ->
+                # Getting the vector pointing the direction
+                previous_block = self.body[index + 1] - block   
+                next_block = self.body[index - 1] - block
+                if previous_block.x == next_block.x:
+                    screen.blit(self.body_vertical, block_rect)
+                elif previous_block.y == next_block.y:
+                    screen.blit(self.body_horizontal, block_rect)
+                else:
+                    if (previous_block.x == -1 and next_block.y == -1) or (previous_block.y == -1 and next_block.x == -1): 
+                        screen.blit(self.body_tl, block_rect)
+                    elif (previous_block.x == -1 and next_block.y == 1) or (previous_block.y == 1 and next_block.x == -1): 
+                        screen.blit(self.body_bl, block_rect)
+                    elif (previous_block.x == 1 and next_block.y == -1) or (previous_block.y == -1 and next_block.x == 1): 
+                        screen.blit(self.body_tr, block_rect)
+                    elif (previous_block.x == 1 and next_block.y == 1) or (previous_block.y == 1 and next_block.x == 1): 
+                        screen.blit(self.body_br, block_rect)
+
 
     def update_head_graphics(self):
         head_relation = self.body[1] - self.body[0]
@@ -139,7 +154,7 @@ class Main:
         self.snake.draw_snake()
 
     def check_collision(self):
-        """Checking for colliosn between snake and fruit, reposiiton the fruit, add another block to snake
+        """Checking for collision between snake and fruit, reposition the fruit, add another block to snake
         """
         if self.fruit.pos == self.snake.body[0]:
             self.fruit.randomize()
@@ -162,7 +177,7 @@ class Main:
         sys.exit()
 
 
-screen_update = pygame.USEREVENT    # castom event - I don;t want to update move_snake every time so I created castom event
+screen_update = pygame.USEREVENT    # custom event - I don;t want to update move_snake every time so I created custom event
 pygame.time.set_timer(screen_update, 100)
 
 main_game = Main()
@@ -175,8 +190,8 @@ while True:
         if event.type == screen_update:
             main_game.update()
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_UP and main_game.snake.direction.y != 1: #This way cannot reverese amd kill himself
-                main_game.snake.direction = Vector2(0, -1) #Chaning vetor -> changing direction
+            if event.key == pygame.K_UP and main_game.snake.direction.y != 1: #This way cannot reverse amd kill himself
+                main_game.snake.direction = Vector2(0, -1) #Changing vector -> changing direction
             if event.key == pygame.K_DOWN and main_game.snake.direction.y != -1:
                 main_game.snake.direction = Vector2(0, 1)
             if event.key == pygame.K_RIGHT and main_game.snake.direction.x != 1:
@@ -191,5 +206,3 @@ while True:
     
     pygame.display.update()
     clock.tick(FPS)
-    
-    # 1:02:23
