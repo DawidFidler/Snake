@@ -3,14 +3,24 @@ import sys
 from pygame.math import Vector2
 import random
 
+pygame.init()
+pygame.mixer.init()
 pygame.display.set_caption("Snake Game")
 
 FPS = 60
 CELL_SIZE = 40
 CELL_NUMBER = 20
-APPLE_IMAGE = pygame.transform.scale(pygame.image.load("Graphics/apple_2.png"), (CELL_SIZE, CELL_SIZE)) #Converts to format which pygame can work easier with
 
-pygame.init()
+SCORE_FONT = pygame.font.Font("Font/score.ttf", 30)
+GAME_OVER_FONT = pygame.font.Font("Font/game_over.ttf", 100)
+
+pygame.mixer.music.load("Sound/music_background.mp3")
+pygame.mixer.music.set_volume(0.1)
+SOUND_CRUNCH = pygame.mixer.Sound("Sound/crunch.wav")
+SOUND_CRUNCH.set_volume(0.1)
+SOUND_GAME_OVER = pygame.mixer.Sound("Sound\lose_trumpet.mp3")
+
+
 screen = pygame.display.set_mode((CELL_SIZE * CELL_NUMBER, CELL_SIZE * CELL_NUMBER))
 clock = pygame.time.Clock()
 
@@ -19,6 +29,7 @@ class Fruit:
     def __init__(self):
         """Create x and y position, create a vector 2d, draw a square
         """
+        self.apple = pygame.transform.scale(pygame.image.load("Graphics/apple_2.png"), (CELL_SIZE, CELL_SIZE))
         self.x = random.randint(0, CELL_NUMBER - 1)
         self.y = random.randint(0, CELL_NUMBER - 1)
         self.pos = Vector2(self.x, self.y)
@@ -28,7 +39,7 @@ class Fruit:
         """
         fruit_rect = pygame.Rect(int(self.pos.x * CELL_SIZE), int(self.pos.y * CELL_SIZE), CELL_SIZE, CELL_SIZE)
         #pygame.draw.rect(screen, (255, 128, 128), fruit_rect)
-        screen.blit(APPLE_IMAGE, fruit_rect)
+        screen.blit(self.apple, fruit_rect)
 
     def randomize(self):
         self.x = random.randint(0, CELL_NUMBER - 1)
@@ -111,6 +122,7 @@ class Snake:
         elif head_relation == Vector2(0, -1):
             self.head = self.head_down
     
+
     def update_tail_graphics(self):
         tail_relation = self.body[-2] - self.body[-1]
         if tail_relation == Vector2(1, 0):
@@ -121,6 +133,7 @@ class Snake:
             self.tail = self.tail_up
         elif tail_relation == Vector2(0, -1):
             self.tail = self.tail_down
+
 
     def move_snake(self):
         if self.new_block == True:
@@ -137,6 +150,7 @@ class Snake:
     def add_block(self):
         self.new_block = True
 
+
 class Main:
     """Main class contains the entire game logic as well as snake and fruit object
     """
@@ -149,17 +163,21 @@ class Main:
         self.check_collision()
         self.check_fail()
 
+
     def draw_elements(self):
+        self.draw_grass()
         self.fruit.draw_fruit()
         self.snake.draw_snake()
-
+        self.draw_score()
+        
     def check_collision(self):
         """Checking for collision between snake and fruit, reposition the fruit, add another block to snake
         """
         if self.fruit.pos == self.snake.body[0]:
             self.fruit.randomize()
             self.snake.add_block()
-    
+            SOUND_CRUNCH.play()
+
     def check_fail(self):
         """Check if snake id outside the screen, check if snake hit himself
         """
@@ -173,14 +191,40 @@ class Main:
                 self.game_over()
 
     def game_over(self):
+        self.draw_game_over()
+        SOUND_GAME_OVER.play()
+        pygame.mixer.music.stop()
+        pygame.time.delay(3000)
         pygame.quit()
         sys.exit()
 
+
+
+    def draw_grass(self):
+        self.grass = pygame.transform.scale(pygame.image.load("Graphics/grass_template2.jpg"), (CELL_SIZE * CELL_NUMBER, CELL_SIZE * CELL_NUMBER))
+        screen.blit(self.grass, (0, 0))
+
+
+    def draw_score(self):
+        self.score = str(len(self.snake.body) - 3)
+        self.score_text = SCORE_FONT.render(f"Score: {self.score}", 1, (255, 255, 255))
+        #This way text is set perfectly in the center on X axis
+        self.text_width = self.score_text.get_width()
+        screen.blit(self.score_text, ((CELL_NUMBER * CELL_SIZE) / 2 - (self.text_width / 2), 20))
+
+    def draw_game_over(self):
+        self.game_over_text = GAME_OVER_FONT.render("GAME OVER", 1, (255, 255, 255))
+        #This way text is set perfectly in the center on X and Y axis
+        self.text_width = self.game_over_text.get_width()
+        self.text_height = self.game_over_text.get_height()
+        screen.blit(self.game_over_text, ((CELL_NUMBER * CELL_SIZE / 2) - self.text_width/2, (CELL_NUMBER * CELL_SIZE / 2) - self.text_height/2))
+        pygame.display.update()
 
 screen_update = pygame.USEREVENT    # custom event - I don;t want to update move_snake every time so I created custom event
 pygame.time.set_timer(screen_update, 100)
 
 main_game = Main()
+pygame.mixer.music.play(-1)
 
 while True:
     for event in pygame.event.get():
@@ -206,3 +250,4 @@ while True:
     
     pygame.display.update()
     clock.tick(FPS)
+    
