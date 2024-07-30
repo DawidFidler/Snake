@@ -4,22 +4,12 @@ from pygame.math import Vector2
 import random
 
 pygame.init()
-pygame.mixer.init()
+
 pygame.display.set_caption("Snake Game")
 
 FPS = 60
 CELL_SIZE = 40
 CELL_NUMBER = 20
-
-SCORE_FONT = pygame.font.Font("Font/score.ttf", 30)
-GAME_OVER_FONT = pygame.font.Font("Font/game_over.ttf", 100)
-
-pygame.mixer.music.load("Sound/music_background.mp3")
-pygame.mixer.music.set_volume(0.1)
-SOUND_CRUNCH = pygame.mixer.Sound("Sound/crunch.wav")
-SOUND_CRUNCH.set_volume(0.1)
-SOUND_GAME_OVER = pygame.mixer.Sound("Sound\lose_trumpet.mp3")
-
 
 screen = pygame.display.set_mode((CELL_SIZE * CELL_NUMBER, CELL_SIZE * CELL_NUMBER))
 clock = pygame.time.Clock()
@@ -150,6 +140,53 @@ class Snake:
     def add_block(self):
         self.new_block = True
 
+class Score:
+    def __init__(self, snake):
+        self.score_font = pygame.font.Font("Font/score.ttf", 30)
+        self.game_over_font = pygame.font.Font("Font/game_over.ttf", 120)
+        self.snake = snake
+
+    def draw_score(self):
+        self.score = str(len(self.snake.body) - 3)
+        self.score_text = self.score_font.render(f"Score: {self.score}", 1, (255, 255, 255))
+        #This way text is set perfectly in the center on X axis
+        self.text_width = self.score_text.get_width()
+        screen.blit(self.score_text, ((CELL_NUMBER * CELL_SIZE) / 2 - (self.text_width / 2), 20))
+        #print(self.score)
+        
+
+    def draw_game_over(self):
+        self.game_over_text = self.game_over_font.render("GAME OVER", 1, (255, 255, 255))
+        #This way text is set perfectly in the center on X and Y axis
+        self.text_width = self.game_over_text.get_width()
+        self.text_height = self.game_over_text.get_height()
+        screen.blit(self.game_over_text, ((CELL_NUMBER * CELL_SIZE / 2) - self.text_width/2, (CELL_NUMBER * CELL_SIZE / 2) - self.text_height/2))
+        pygame.display.update()
+
+
+class SoundManager:
+    def __init__(self):
+        pygame.mixer.init()
+        self.background_music = "Sound/music_background.mp3"
+        self.crunch = pygame.mixer.Sound("Sound/crunch.wav")
+        self.game_over = pygame.mixer.Sound("Sound\lose_trumpet.mp3")
+        
+        self.crunch.set_volume(0.1)
+        pygame.mixer.music.load(self.background_music)
+        pygame.mixer.music.set_volume(0.1)
+
+
+    def play_background_music(self):
+        pygame.mixer.music.play(-1)
+
+    def stop_background_music(self):
+        pygame.mixer.music.stop()
+
+    def play_crunch(self):
+        self.crunch.play()
+    
+    def play_game_over(self):
+        self.game_over.play()
 
 class Main:
     """Main class contains the entire game logic as well as snake and fruit object
@@ -157,7 +194,8 @@ class Main:
     def __init__(self):
         self.snake = Snake()
         self.fruit = Fruit()
-    
+        self.score = Score(self.snake)  #passing existing snake object in order to have correct snake length
+
     def update(self):
         self.snake.move_snake()
         self.check_collision()
@@ -168,7 +206,7 @@ class Main:
         self.draw_grass()
         self.fruit.draw_fruit()
         self.snake.draw_snake()
-        self.draw_score()
+        self.score.draw_score()
         
     def check_collision(self):
         """Checking for collision between snake and fruit, reposition the fruit, add another block to snake
@@ -176,7 +214,11 @@ class Main:
         if self.fruit.pos == self.snake.body[0]:
             self.fruit.randomize()
             self.snake.add_block()
-            SOUND_CRUNCH.play()
+            sound_manager.play_crunch()
+        
+        for block in self.snake.body[1:]:   # Fruit won't spawn in snake
+            if block == self.fruit.pos:
+                self.fruit.randomize()
 
     def check_fail(self):
         """Check if snake id outside the screen, check if snake hit himself
@@ -191,9 +233,9 @@ class Main:
                 self.game_over()
 
     def game_over(self):
-        self.draw_game_over()
-        SOUND_GAME_OVER.play()
-        pygame.mixer.music.stop()
+        self.score.draw_game_over()
+        sound_manager.play_game_over()
+        sound_manager.stop_background_music()
         pygame.time.delay(3000)
         pygame.quit()
         sys.exit()
@@ -205,26 +247,15 @@ class Main:
         screen.blit(self.grass, (0, 0))
 
 
-    def draw_score(self):
-        self.score = str(len(self.snake.body) - 3)
-        self.score_text = SCORE_FONT.render(f"Score: {self.score}", 1, (255, 255, 255))
-        #This way text is set perfectly in the center on X axis
-        self.text_width = self.score_text.get_width()
-        screen.blit(self.score_text, ((CELL_NUMBER * CELL_SIZE) / 2 - (self.text_width / 2), 20))
-
-    def draw_game_over(self):
-        self.game_over_text = GAME_OVER_FONT.render("GAME OVER", 1, (255, 255, 255))
-        #This way text is set perfectly in the center on X and Y axis
-        self.text_width = self.game_over_text.get_width()
-        self.text_height = self.game_over_text.get_height()
-        screen.blit(self.game_over_text, ((CELL_NUMBER * CELL_SIZE / 2) - self.text_width/2, (CELL_NUMBER * CELL_SIZE / 2) - self.text_height/2))
-        pygame.display.update()
+    
 
 screen_update = pygame.USEREVENT    # custom event - I don;t want to update move_snake every time so I created custom event
 pygame.time.set_timer(screen_update, 100)
 
 main_game = Main()
-pygame.mixer.music.play(-1)
+# pygame.mixer.music.play(-1)
+sound_manager = SoundManager()
+sound_manager.play_background_music()
 
 while True:
     for event in pygame.event.get():
@@ -238,7 +269,7 @@ while True:
                 main_game.snake.direction = Vector2(0, -1) #Changing vector -> changing direction
             if event.key == pygame.K_DOWN and main_game.snake.direction.y != -1:
                 main_game.snake.direction = Vector2(0, 1)
-            if event.key == pygame.K_RIGHT and main_game.snake.direction.x != 1:
+            if event.key == pygame.K_RIGHT and main_game.snake.direction.x != -1:
                 main_game.snake.direction = Vector2(1, 0)
             if event.key == pygame.K_LEFT and main_game.snake.direction.x != 1:
                 main_game.snake.direction = Vector2(-1, 0)
