@@ -4,7 +4,6 @@ from pygame.math import Vector2
 import random
 
 pygame.init()
-
 pygame.display.set_caption("Snake Game")
 
 FPS = 60
@@ -19,7 +18,6 @@ class Fruit:
     def __init__(self):
         """Create x and y position, create a vector 2d, draw a square
         """
-        self.apple = pygame.transform.scale(pygame.image.load("Graphics/apple_2.png"), (CELL_SIZE, CELL_SIZE))
         self.x = random.randint(0, CELL_NUMBER - 1)
         self.y = random.randint(0, CELL_NUMBER - 1)
         self.pos = Vector2(self.x, self.y)
@@ -29,7 +27,7 @@ class Fruit:
         """
         fruit_rect = pygame.Rect(int(self.pos.x * CELL_SIZE), int(self.pos.y * CELL_SIZE), CELL_SIZE, CELL_SIZE)
         #pygame.draw.rect(screen, (255, 128, 128), fruit_rect)
-        screen.blit(self.apple, fruit_rect)
+        screen.blit(asset_manager.apple, fruit_rect)
 
     def randomize(self):
         self.x = random.randint(0, CELL_NUMBER - 1)
@@ -40,26 +38,7 @@ class Snake:
     def __init__(self):
         self.body = [Vector2(5, 5), Vector2(4, 5), Vector2(3, 5)]
         self.direction = Vector2(1, 0)
-        self.new_block = False
-
-        self.head_up = pygame.image.load('Graphics/head_up.png').convert_alpha()
-        self.head_down = pygame.image.load('Graphics/head_down.png').convert_alpha()
-        self.head_right = pygame.image.load('Graphics/head_right.png').convert_alpha()
-        self.head_left = pygame.image.load('Graphics/head_left.png').convert_alpha()
-		
-        self.tail_up = pygame.image.load('Graphics/tail_up.png').convert_alpha()
-        self.tail_down = pygame.image.load('Graphics/tail_down.png').convert_alpha()
-        self.tail_right = pygame.image.load('Graphics/tail_right.png').convert_alpha()
-        self.tail_left = pygame.image.load('Graphics/tail_left.png').convert_alpha()
-
-        self.body_vertical = pygame.image.load('Graphics/body_vertical.png').convert_alpha()
-        self.body_horizontal = pygame.image.load('Graphics/body_horizontal.png').convert_alpha()
-
-        self.body_tr = pygame.image.load('Graphics/body_tr.png').convert_alpha()
-        self.body_tl = pygame.image.load('Graphics/body_tl.png').convert_alpha()
-        self.body_br = pygame.image.load('Graphics/body_br.png').convert_alpha()
-        self.body_bl = pygame.image.load('Graphics/body_bl.png').convert_alpha()
-
+        self.new_block = False     
 
     def draw_snake(self):
         self.update_head_graphics()
@@ -87,42 +66,42 @@ class Snake:
                 previous_block = self.body[index + 1] - block   
                 next_block = self.body[index - 1] - block
                 if previous_block.x == next_block.x:
-                    screen.blit(self.body_vertical, block_rect)
+                    screen.blit(asset_manager.body_vertical, block_rect)
                 elif previous_block.y == next_block.y:
-                    screen.blit(self.body_horizontal, block_rect)
+                    screen.blit(asset_manager.body_horizontal, block_rect)
                 else:
                     if (previous_block.x == -1 and next_block.y == -1) or (previous_block.y == -1 and next_block.x == -1): 
-                        screen.blit(self.body_tl, block_rect)
+                        screen.blit(asset_manager.body_tl, block_rect)
                     elif (previous_block.x == -1 and next_block.y == 1) or (previous_block.y == 1 and next_block.x == -1): 
-                        screen.blit(self.body_bl, block_rect)
+                        screen.blit(asset_manager.body_bl, block_rect)
                     elif (previous_block.x == 1 and next_block.y == -1) or (previous_block.y == -1 and next_block.x == 1): 
-                        screen.blit(self.body_tr, block_rect)
+                        screen.blit(asset_manager.body_tr, block_rect)
                     elif (previous_block.x == 1 and next_block.y == 1) or (previous_block.y == 1 and next_block.x == 1): 
-                        screen.blit(self.body_br, block_rect)
+                        screen.blit(asset_manager.body_br, block_rect)
 
 
     def update_head_graphics(self):
         head_relation = self.body[1] - self.body[0]
         if head_relation == Vector2(1, 0):
-            self.head = self.head_left
+            self.head = asset_manager.head_left
         elif head_relation == Vector2(-1, 0):
-            self.head = self.head_right
+            self.head = asset_manager.head_right
         elif head_relation == Vector2(0, 1):
-            self.head = self.head_up
+            self.head = asset_manager.head_up
         elif head_relation == Vector2(0, -1):
-            self.head = self.head_down
+            self.head = asset_manager.head_down
     
 
     def update_tail_graphics(self):
         tail_relation = self.body[-2] - self.body[-1]
         if tail_relation == Vector2(1, 0):
-            self.tail = self.tail_left
+            self.tail = asset_manager.tail_left
         elif tail_relation == Vector2(-1, 0):
-            self.tail = self.tail_right
+            self.tail = asset_manager.tail_right
         elif tail_relation == Vector2(0, 1):
-            self.tail = self.tail_up
+            self.tail = asset_manager.tail_up
         elif tail_relation == Vector2(0, -1):
-            self.tail = self.tail_down
+            self.tail = asset_manager.tail_down
 
 
     def move_snake(self):
@@ -142,13 +121,11 @@ class Snake:
 
 class Score:
     def __init__(self, snake):
-        self.score_font = pygame.font.Font("Font/score.ttf", 30)
-        self.game_over_font = pygame.font.Font("Font/game_over.ttf", 120)
         self.snake = snake
 
-    def draw_score(self):
+    def draw_actual_score(self):
         self.score = str(len(self.snake.body) - 3)
-        self.score_text = self.score_font.render(f"Score: {self.score}", 1, (255, 255, 255))
+        self.score_text = asset_manager.actual_score_font.render(f"score: {self.score}", 1, (255, 255, 255))
         #This way text is set perfectly in the center on X axis
         self.text_width = self.score_text.get_width()
         screen.blit(self.score_text, ((CELL_NUMBER * CELL_SIZE) / 2 - (self.text_width / 2), 20))
@@ -156,13 +133,34 @@ class Score:
         
 
     def draw_game_over(self):
-        self.game_over_text = self.game_over_font.render("GAME OVER", 1, (255, 255, 255))
+        self.game_over_text = asset_manager.game_over_font.render("GAME OVER", 1, (255, 255, 255))
         #This way text is set perfectly in the center on X and Y axis
         self.text_width = self.game_over_text.get_width()
         self.text_height = self.game_over_text.get_height()
-        screen.blit(self.game_over_text, ((CELL_NUMBER * CELL_SIZE / 2) - self.text_width/2, (CELL_NUMBER * CELL_SIZE / 2) - self.text_height/2))
+        screen.blit(self.game_over_text, ((CELL_NUMBER * CELL_SIZE / 2) - self.text_width/2, 
+                                          (CELL_NUMBER * CELL_SIZE / 2) - self.text_height/2))
         pygame.display.update()
 
+
+    def draw_best_score(self):
+        with open("best_score.txt", "r") as file:
+            self.data = file.read()
+        
+        self.best_score_text = asset_manager.actual_score_font.render(f"best: {self.data}", 1, (255, 255, 255))
+        screen.blit(self.best_score_text, (640, 750))
+        
+
+    def update_best_score(self):
+        self.score = len(self.snake.body) - 3
+        with open("best_score.txt", "r") as file:
+            self.old_best = file.read()
+            self.old_best_int = int(self.old_best)
+        
+        if self.score > self.old_best_int:
+            self.new_best = str(self.score)
+            with open("best_score.txt", "w") as file:
+                file.write(self.new_best)
+        
 
 class SoundManager:
     def __init__(self):
@@ -188,6 +186,28 @@ class SoundManager:
     def play_game_over(self):
         self.game_over.play()
 
+class AssetManager:
+    def __init__(self):
+        self.apple = pygame.transform.scale(pygame.image.load("Graphics/apple_2.png"), (CELL_SIZE, CELL_SIZE))
+        self.head_up = pygame.image.load('Graphics/head_up.png').convert_alpha()
+        self.head_down = pygame.image.load('Graphics/head_down.png').convert_alpha()
+        self.head_right = pygame.image.load('Graphics/head_right.png').convert_alpha()
+        self.head_left = pygame.image.load('Graphics/head_left.png').convert_alpha()
+        self.tail_up = pygame.image.load('Graphics/tail_up.png').convert_alpha()
+        self.tail_down = pygame.image.load('Graphics/tail_down.png').convert_alpha()
+        self.tail_right = pygame.image.load('Graphics/tail_right.png').convert_alpha()
+        self.tail_left = pygame.image.load('Graphics/tail_left.png').convert_alpha()
+        self.body_vertical = pygame.image.load('Graphics/body_vertical.png').convert_alpha()
+        self.body_horizontal = pygame.image.load('Graphics/body_horizontal.png').convert_alpha()
+        self.body_tr = pygame.image.load('Graphics/body_tr.png').convert_alpha()
+        self.body_tl = pygame.image.load('Graphics/body_tl.png').convert_alpha()
+        self.body_br = pygame.image.load('Graphics/body_br.png').convert_alpha()
+        self.body_bl = pygame.image.load('Graphics/body_bl.png').convert_alpha()
+        self.grass = pygame.transform.scale(pygame.image.load("Graphics/grass_template2.jpg"), (CELL_SIZE * CELL_NUMBER, CELL_SIZE * CELL_NUMBER))
+
+        self.actual_score_font = pygame.font.Font("Font/score.ttf", 30)
+        self.game_over_font = pygame.font.Font("Font/game_over.ttf", 120)
+
 class Main:
     """Main class contains the entire game logic as well as snake and fruit object
     """
@@ -206,7 +226,8 @@ class Main:
         self.draw_grass()
         self.fruit.draw_fruit()
         self.snake.draw_snake()
-        self.score.draw_score()
+        self.score.draw_actual_score()
+        self.score.draw_best_score()
         
     def check_collision(self):
         """Checking for collision between snake and fruit, reposition the fruit, add another block to snake
@@ -234,28 +255,26 @@ class Main:
 
     def game_over(self):
         self.score.draw_game_over()
+        self.score.update_best_score()
         sound_manager.play_game_over()
         sound_manager.stop_background_music()
         pygame.time.delay(3000)
         pygame.quit()
         sys.exit()
 
-
-
     def draw_grass(self):
-        self.grass = pygame.transform.scale(pygame.image.load("Graphics/grass_template2.jpg"), (CELL_SIZE * CELL_NUMBER, CELL_SIZE * CELL_NUMBER))
-        screen.blit(self.grass, (0, 0))
+        screen.blit(asset_manager.grass, (0, 0))
 
-
-    
+  
 
 screen_update = pygame.USEREVENT    # custom event - I don;t want to update move_snake every time so I created custom event
 pygame.time.set_timer(screen_update, 100)
 
 main_game = Main()
-# pygame.mixer.music.play(-1)
 sound_manager = SoundManager()
+asset_manager = AssetManager()
 sound_manager.play_background_music()
+
 
 while True:
     for event in pygame.event.get():
