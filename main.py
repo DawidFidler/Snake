@@ -317,10 +317,10 @@ class MainMenu:
         '''As time progresses, this function causes the font size to increase and decrease,
         making the text pulsing/breathing'''
         self.base_size = 35
-        self.time = pygame.time.get_ticks() / 1000 # returns the time(in milliseconds) since the start of the game
+        self.time = pygame.time.get_ticks() / 1000 # returns the time(in seconds) since the start of the game
 
         self.size_offset = int(self.base_size + 10 * math.sin(self.time * 4)) # This line calculates how much the font size should pulsate ath the current time
-            # math.sin(self.time * 4)creates a sinusoidal wave that oscillates between -1 and 1. Multiplication by 4 makes the oscillation faster
+            # math.sin(self.time)creates a sinusoidal wave that oscillates between -1 and 1. Multiplication by 4 makes the oscillation faster
             # Multiplication this by 10 scales the oscillation to a range of -10 to 10
             # Adding base size (35) result in the final font size, which oscillates between 25 and 45
         
