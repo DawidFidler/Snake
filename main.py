@@ -2,6 +2,7 @@ import pygame
 import sys
 from pygame.math import Vector2
 import random
+import math
 
 pygame.init()
 pygame.display.set_caption("Snake Game")
@@ -16,20 +17,22 @@ clock = pygame.time.Clock()
 
 class Fruit:
     def __init__(self):
-        """Create x and y position, create a vector 2d, draw a square
+        """Creates x and y position, create a vector 2d, draw a square
         """
         self.x = random.randint(0, CELL_NUMBER - 1)
         self.y = random.randint(0, CELL_NUMBER - 1)
         self.pos = Vector2(self.x, self.y)
     
     def draw_fruit(self):
-        """Create a rectangle, draw the rectangle
+        """Creates a rectangle, draw the rectangle
         """
         fruit_rect = pygame.Rect(int(self.pos.x * CELL_SIZE), int(self.pos.y * CELL_SIZE), CELL_SIZE, CELL_SIZE)
         #pygame.draw.rect(screen, (255, 128, 128), fruit_rect)
         screen.blit(asset_manager.apple, fruit_rect)
 
     def randomize(self):
+        """Makes random fruit position spawn
+        """
         self.x = random.randint(0, CELL_NUMBER - 1)
         self.y = random.randint(0, CELL_NUMBER - 1)
         self.pos = Vector2(self.x, self.y)
@@ -50,7 +53,7 @@ class Snake:
         #     pygame.draw.rect(screen, (26, 26, 255), block_rect)
 
         for index, block in enumerate(self.body):
-            # 1. We still need a rect for the positioning
+            # 1. I still need a rect for the positioning
             x_pos = int(block.x * CELL_SIZE)
             y_pos = int(block.y * CELL_SIZE)
             block_rect = pygame.Rect(x_pos, y_pos, CELL_SIZE, CELL_SIZE)
@@ -58,7 +61,7 @@ class Snake:
             # 2. What direction is the face heading
             if index == 0:  # 0 is the first element, so it's always head
                 screen.blit(self.head, block_rect)
-            elif index == len(self.body) -1:    #Last segment
+            elif index == len(self.body) -1:    # Last segment
                 screen.blit(self.tail, block_rect)
             else:
                 # Indexing from self.body, index is going to be our current element. Adding or subtracting one to get previous or next block. Subtracting the current block to get relation between those two ->
@@ -118,12 +121,20 @@ class Snake:
 
     def add_block(self):
         self.new_block = True
+    
+    def snake_reset(self):
+        """Resets snake position after loose and pressing space again
+        """
+        self.body = [Vector2(5, 5), Vector2(4, 5), Vector2(3, 5)]
+        self.direction = Vector2(1, 0)
 
 class Score:
     def __init__(self, snake):
         self.snake = snake
 
     def draw_actual_score(self):
+        """Draws actual score in current gameplay
+        """
         self.score = str(len(self.snake.body) - 3)
         self.score_text = asset_manager.actual_score_font.render(f"score: {self.score}", 1, (255, 255, 255))
         #This way text is set perfectly in the center on X axis
@@ -133,6 +144,8 @@ class Score:
         
 
     def draw_game_over(self):
+        """Draws text after loosing
+        """     
         self.game_over_text = asset_manager.game_over_font.render("GAME OVER", 1, (255, 255, 255))
         #This way text is set perfectly in the center on X and Y axis
         self.text_width = self.game_over_text.get_width()
@@ -143,6 +156,8 @@ class Score:
 
 
     def draw_best_score(self):
+        """Draws best score based on number read from text file
+        """
         with open("best_score.txt", "r") as file:
             self.data = file.read()
         
@@ -151,6 +166,8 @@ class Score:
         
 
     def update_best_score(self):
+        """Reads txt file with best score. When actual score is greater, the one in file is updated
+        """
         self.score = len(self.snake.body) - 3
         with open("best_score.txt", "r") as file:
             self.old_best = file.read()
@@ -161,8 +178,9 @@ class Score:
             with open("best_score.txt", "w") as file:
                 file.write(self.new_best)
         
-
 class SoundManager:
+    """Contains and manages all sound and music used in game
+    """
     def __init__(self):
         pygame.mixer.init()
         self.background_music = "Sound/music_background.mp3"
@@ -187,6 +205,8 @@ class SoundManager:
         self.game_over.play()
 
 class AssetManager:
+    """Contains and manages graphics and fonts used in game
+    """
     def __init__(self):
         self.apple = pygame.transform.scale(pygame.image.load("Graphics/apple_2.png"), (CELL_SIZE, CELL_SIZE))
         self.head_up = pygame.image.load('Graphics/head_up.png').convert_alpha()
@@ -204,12 +224,14 @@ class AssetManager:
         self.body_br = pygame.image.load('Graphics/body_br.png').convert_alpha()
         self.body_bl = pygame.image.load('Graphics/body_bl.png').convert_alpha()
         self.grass = pygame.transform.scale(pygame.image.load("Graphics/grass_template2.jpg"), (CELL_SIZE * CELL_NUMBER, CELL_SIZE * CELL_NUMBER))
+        self.menu_background = pygame.transform.scale(pygame.image.load("Graphics/menu_background.jpg"), (CELL_SIZE * CELL_NUMBER, CELL_SIZE * CELL_NUMBER))
 
         self.actual_score_font = pygame.font.Font("Font/score.ttf", 30)
         self.game_over_font = pygame.font.Font("Font/game_over.ttf", 120)
+        self.menu_font = pygame.font.Font(None, 64)
 
-class Main:
-    """Main class contains the entire game logic as well as snake and fruit object
+class MainGame:
+    """Contains the entire game logic as well as snake and fruit object
     """
     def __init__(self):
         self.snake = Snake()
@@ -220,7 +242,6 @@ class Main:
         self.snake.move_snake()
         self.check_collision()
         self.check_fail()
-
 
     def draw_elements(self):
         self.draw_grass()
@@ -258,23 +279,66 @@ class Main:
         self.score.update_best_score()
         sound_manager.play_game_over()
         sound_manager.stop_background_music()
-        pygame.time.delay(3000)
-        pygame.quit()
-        sys.exit()
+        pygame.time.delay(2000)
+        main_menu.display_menu()
 
     def draw_grass(self):
         screen.blit(asset_manager.grass, (0, 0))
+    
+class MainMenu:
+    """Displays main menu after run script, allows to start main game or stop executing code"""
+    def __init__(self):
+        self.menu_title_text = asset_manager.menu_font.render("Welcome to Snake Game", True, (255, 255, 255))
 
-  
+    def display_menu(self):
+        """Creates loop with main menu"""
+        sound_manager.play_background_music()
+
+        run = True
+        while run:
+            screen.blit(asset_manager.menu_background, (0, 0))
+            screen.blit(self.menu_title_text, (135, 150))
+            self.display_pulsing_text()
+            pygame.display.update()
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE:
+                        main_game.snake.snake_reset()
+                        run = False
+                    if event.key == pygame.K_ESCAPE:
+                        pygame.quit()
+                        sys.exit()
+    
+    def display_pulsing_text(self):
+        '''As time progresses, this function causes the font size to increase and decrease,
+        making the text pulsing/breathing'''
+        self.base_size = 35
+        self.time = pygame.time.get_ticks() / 1000 # returns the time(in milliseconds) since the start of the game
+
+        self.size_offset = int(self.base_size + 10 * math.sin(self.time * 4)) # This line calculates how much the font size should pulsate ath the current time
+            # math.sin(self.time * 4)creates a sinusoidal wave that oscillates between -1 and 1. Multiplication by 4 makes the oscillation faster
+            # Multiplication this by 10 scales the oscillation to a range of -10 to 10
+            # Adding base size (35) result in the final font size, which oscillates between 25 and 45
+        
+        self.animated_font = pygame.font.Font(None, self.base_size + self.size_offset) # Creating new font with fluctuating size based on previous line
+        self.play_text = self.animated_font.render("Press SPACE to Play", True, (255, 255, 255))
+        self.center = self.play_text.get_rect(center=(400, 650)) # Creating a rectangle which is centered at the given coordinates
+        screen.blit(self.play_text, self.center)
+        
 
 screen_update = pygame.USEREVENT    # custom event - I don;t want to update move_snake every time so I created custom event
 pygame.time.set_timer(screen_update, 100)
 
-main_game = Main()
+main_game = MainGame()
 sound_manager = SoundManager()
 asset_manager = AssetManager()
-sound_manager.play_background_music()
+main_menu = MainMenu()
 
+main_menu.display_menu()
 
 while True:
     for event in pygame.event.get():
@@ -293,11 +357,8 @@ while True:
             if event.key == pygame.K_LEFT and main_game.snake.direction.x != 1:
                 main_game.snake.direction = Vector2(-1, 0)
 
-    screen.fill((150, 219, 159))
-    main_game.draw_elements()
-    #pygame.draw.rect(screen, (210, 159, 72), test_rect)
-    #screen.blit(test_surface, test_rect)   # Surface and coordinates
     
+    main_game.draw_elements()   
     pygame.display.update()
     clock.tick(FPS)
     
