@@ -4,6 +4,7 @@ This is a classic Snake Game implemented in Python using the Pygame library. The
 - [Features](#features)
 - [How to Play](#how-to-play)
 - [Requirements](#requirements)
+- [Gameplay](#gameplay)
 
 ## Features
 - Classic Snake game mechanics
@@ -23,3 +24,8 @@ This is a classic Snake Game implemented in Python using the Pygame library. The
 ## Requirements
 - Python 3.x installed on your machine
 - Pygame library installed. You can install it using pip
+
+
+## Gameplay
+![snake_gameplay](https://github.com/user-attachments/assets/d92eac42-0798-4cb2-bf73-d0e85dfa3cf5)
+
