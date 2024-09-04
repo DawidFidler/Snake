@@ -20,6 +20,6 @@ This is a classic Snake Game implemented in Python using the Pygame library. The
 - The game ends if the snake collides with the walls or itself
 - Press SPACE on the Game Over screen to restart the game, or ESC to quit
 
-  ## Requirements
+## Requirements
 - Python 3.x installed on your machine
 - Pygame library installed. You can install it using pip
