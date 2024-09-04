@@ -298,7 +298,7 @@ class MainMenu:
         while run:
             screen.blit(asset_manager.menu_background, (0, 0))
             screen.blit(self.menu_title_text, (135, 150))
-            self.display_pulsing_text()
+            self.display_pulsing_text(35, "Press SPACE to Play", (255, 255, 255), (400, 650))
             pygame.display.update()
 
             for event in pygame.event.get():
@@ -313,20 +313,23 @@ class MainMenu:
                         pygame.quit()
                         sys.exit()
     
-    def display_pulsing_text(self):
+    def display_pulsing_text(self, base_size, text, color, position):
         '''As time progresses, this function causes the font size to increase and decrease,
         making the text pulsing/breathing'''
-        self.base_size = 35
-        self.time = pygame.time.get_ticks() / 1000 # returns the time(in milliseconds) since the start of the game
+        self.base_size = base_size
+        self.text = text
+        self.color = color
+        self.position = position
+        self.time = pygame.time.get_ticks() / 1000 # returns the time(in seconds) since the start of the game
 
-        self.size_offset = int(self.base_size + 10 * math.sin(self.time * 4)) # This line calculates how much the font size should pulsate ath the current time
+        self.size_offset = int(base_size + 10 * math.sin(self.time * 4)) # This line calculates how much the font size should pulsate ath the current time
             # math.sin(self.time * 4)creates a sinusoidal wave that oscillates between -1 and 1. Multiplication by 4 makes the oscillation faster
             # Multiplication this by 10 scales the oscillation to a range of -10 to 10
             # Adding base size (35) result in the final font size, which oscillates between 25 and 45
         
-        self.animated_font = pygame.font.Font(None, self.base_size + self.size_offset) # Creating new font with fluctuating size based on previous line
-        self.play_text = self.animated_font.render("Press SPACE to Play", True, (255, 255, 255))
-        self.center = self.play_text.get_rect(center=(400, 650)) # Creating a rectangle which is centered at the given coordinates
+        self.animated_font = pygame.font.Font(None, base_size + self.size_offset) # Creating new font with fluctuating size based on previous line
+        self.play_text = self.animated_font.render(text, True, color)
+        self.center = self.play_text.get_rect(center=position) # Creating a rectangle which is centered at the given coordinates
         screen.blit(self.play_text, self.center)
         
 
